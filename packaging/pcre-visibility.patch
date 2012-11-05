@@ -1,0 +1,192 @@
+Index: configure.ac
+===================================================================
+--- configure.ac.orig
++++ configure.ac
+@@ -45,8 +45,12 @@ AC_CONFIG_MACRO_DIR([m4])
+ remember_set_CFLAGS="$CFLAGS"
+ remember_set_CXXFLAGS="$CXXFLAGS"
+ 
+-AC_PROG_CC
++AC_PROG_CC_STDC
++AC_USE_SYSTEM_EXTENSIONS
++AC_SYS_LARGEFILE
++AM_PROG_CC_C_O
+ AC_PROG_CXX
++PCRE_VISIBILITY
+ 
+ if test "x$remember_set_CFLAGS" = "x"
+ then
+@@ -80,8 +84,7 @@ AC_LANG_POP
+ AC_TYPE_INT64_T
+ 
+ AC_PROG_INSTALL
+-AC_LIBTOOL_WIN32_DLL
+-LT_INIT
++LT_INIT([win32-dll pic-only disable-static])
+ AC_PROG_LN_S
+ 
+ PCRE_MAJOR="pcre_major"
+Index: m4/visibility.m4
+===================================================================
+--- /dev/null
++++ m4/visibility.m4
+@@ -0,0 +1,89 @@
++# visibility.m4 serial 4 (gettext-0.18.2)
++dnl Copyright (C) 2005, 2008, 2010-2011 Free Software Foundation, Inc.
++dnl This file is free software; the Free Software Foundation
++dnl gives unlimited permission to copy and/or distribute it,
++dnl with or without modifications, as long as this notice is preserved.
++
++dnl From Bruno Haible.
++
++dnl Tests whether the compiler supports the command-line option
++dnl -fvisibility=hidden and the function and variable attributes
++dnl __attribute__((__visibility__("hidden"))) and
++dnl __attribute__((__visibility__("default"))).
++dnl Does *not* test for __visibility__("protected") - which has tricky
++dnl semantics (see the 'vismain' test in glibc) and does not exist e.g. on
++dnl MacOS X.
++dnl Does *not* test for __visibility__("internal") - which has processor
++dnl dependent semantics.
++dnl Does *not* test for #pragma GCC visibility push(hidden) - which is
++dnl "really only recommended for legacy code".
++dnl Set the variable CFLAG_VISIBILITY.
++dnl Defines and sets the variable HAVE_VISIBILITY.
++
++dnl Modified to fit with PCRE build environment by Cristian Rodríguez.
++
++AC_DEFUN([PCRE_VISIBILITY],
++[
++  AC_REQUIRE([AC_PROG_CC])
++  CFLAG_VISIBILITY=
++  CXXFLAG_INLINES_HIDDEN=
++  HAVE_VISIBILITY=0
++  if test -n "$GCC"; then
++    dnl First, check whether -Werror can be added to the command line, or
++    dnl whether it leads to an error because of some other option that the
++    dnl user has put into $CC $CFLAGS $CPPFLAGS.
++    AC_MSG_CHECKING([whether the -Werror option is usable])
++    AC_CACHE_VAL([gl_cv_cc_vis_werror], [
++      gl_save_CFLAGS="$CFLAGS"
++      CFLAGS="$CFLAGS -Werror"
++      AC_COMPILE_IFELSE(
++        [AC_LANG_PROGRAM([[]], [[]])],
++        [gl_cv_cc_vis_werror=yes],
++        [gl_cv_cc_vis_werror=no])
++      CFLAGS="$gl_save_CFLAGS"])
++    AC_MSG_RESULT([$gl_cv_cc_vis_werror])
++    dnl Now check whether visibility declarations are supported.
++    AC_MSG_CHECKING([for simple visibility declarations])
++    AC_CACHE_VAL([gl_cv_cc_visibility], [
++      gl_save_CFLAGS="$CFLAGS"
++      CFLAGS="$CFLAGS -fvisibility=hidden"
++      dnl We use the option -Werror and a function dummyfunc, because on some
++      dnl platforms (Cygwin 1.7) the use of -fvisibility triggers a warning
++      dnl "visibility attribute not supported in this configuration; ignored"
++      dnl at the first function definition in every compilation unit, and we
++      dnl don't want to use the option in this case.
++      if test $gl_cv_cc_vis_werror = yes; then
++        CFLAGS="$CFLAGS -Werror"
++      fi
++      AC_COMPILE_IFELSE(
++        [AC_LANG_PROGRAM(
++           [[extern __attribute__((__visibility__("hidden"))) int hiddenvar;
++             extern __attribute__((__visibility__("default"))) int exportedvar;
++             extern __attribute__((__visibility__("hidden"))) int hiddenfunc (void);
++             extern __attribute__((__visibility__("default"))) int exportedfunc (void);
++             void dummyfunc (void) {}
++           ]],
++           [[]])],
++        [gl_cv_cc_visibility=yes],
++        [gl_cv_cc_visibility=no])
++      CFLAGS="$gl_save_CFLAGS"])
++    AC_MSG_RESULT([$gl_cv_cc_visibility])
++    if test $gl_cv_cc_visibility = yes; then
++      CFLAG_VISIBILITY="-fvisibility=hidden"
++      CXXFLAG_INLINES_HIDDEN="-fvisibility-inlines-hidden"
++      HAVE_VISIBILITY=1
++      AC_DEFINE(PCRE_EXP_DECL, [extern __attribute__ ((visibility ("default")))], [to make a symbol visible])
++      AC_DEFINE(PCRE_EXP_DEFN, [__attribute__ ((visibility ("default")))], [to make a symbol visible])
++      AC_DEFINE(PCRE_EXP_DATA_DEFN, [__attribute__ ((visibility ("default")))], [to make a symbol visible])
++      AC_DEFINE(PCREPOSIX_EXP_DECL, [extern __attribute__ ((visibility ("default")))], [to make a symbol visible])
++      AC_DEFINE(PCREPOSIX_EXP_DEFN, [extern __attribute__ ((visibility ("default")))], [to make a symbol visible])
++      AC_DEFINE(PCRECPP_EXP_DECL, [extern __attribute__ ((visibility ("default")))], [to make a symbol visible])
++      AC_DEFINE(PCRECPP_EXP_DEFN, [__attribute__ ((visibility ("default")))], [to make a symbol visible])
++    fi
++  fi
++  AC_SUBST([CFLAG_VISIBILITY])
++  AC_SUBST([CXXFLAG_INLINES_HIDDEN])
++  AC_SUBST([HAVE_VISIBILITY])
++  AC_DEFINE_UNQUOTED([HAVE_VISIBILITY], [$HAVE_VISIBILITY],
++    [Define to 1 or 0, depending whether the compiler supports simple visibility declarations.])
++])
+Index: Makefile.am
+===================================================================
+--- Makefile.am.orig
++++ Makefile.am
+@@ -179,6 +179,9 @@ BUILT_SOURCES = pcre_chartables.c
+ # Build the 8 bit library if it is enabled.
+ if WITH_PCRE8
+ lib_LTLIBRARIES += libpcre.la
++
++libpcre_la_CFLAGS = $(CFLAG_VISIBILITY)
++
+ libpcre_la_SOURCES = \
+   pcre_byte_order.c \
+   pcre_compile.c \
+@@ -212,6 +215,7 @@ endif # WITH_PCRE8
+ # Build the 16 bit library if it is enabled.
+ if WITH_PCRE16
+ lib_LTLIBRARIES += libpcre16.la
++libpcre16_la_CFLAGS = $(CFLAG_VISIBILITY)
+ libpcre16_la_SOURCES = \
+   pcre16_byte_order.c \
+   pcre16_chartables.c \
+@@ -267,10 +271,10 @@ EXTRA_DIST += \
+   sljit/sljitUtils.c
+ 
+ if WITH_PCRE8
+-libpcre_la_LDFLAGS = $(EXTRA_LIBPCRE_LDFLAGS)
++libpcre_la_LDFLAGS = -no-undefined $(EXTRA_LIBPCRE_LDFLAGS)
+ endif # WITH_PCRE8
+ if WITH_PCRE16
+-libpcre16_la_LDFLAGS = $(EXTRA_LIBPCRE16_LDFLAGS)
++libpcre16_la_LDFLAGS = -no-undefined $(EXTRA_LIBPCRE16_LDFLAGS)
+ endif # WITH_PCRE16
+ 
+ CLEANFILES += pcre_chartables.c
+@@ -292,9 +296,10 @@ endif # WITH_JIT
+ ## A version of the main pcre library that has a posix re API.
+ if WITH_PCRE8
+ lib_LTLIBRARIES += libpcreposix.la
++libpcreposix_la_CFLAGS = $(CFLAG_VISIBILITY)
+ libpcreposix_la_SOURCES = \
+   pcreposix.c
+-libpcreposix_la_LDFLAGS = $(EXTRA_LIBPCREPOSIX_LDFLAGS)
++libpcreposix_la_LDFLAGS = -no-undefined $(EXTRA_LIBPCREPOSIX_LDFLAGS)
+ libpcreposix_la_LIBADD = libpcre.la
+ endif # WITH_PCRE8
+ 
+@@ -302,12 +307,13 @@ endif # WITH_PCRE8
+ if WITH_PCRE_CPP
+ 
+ lib_LTLIBRARIES += libpcrecpp.la
++libpcrecpp_la_CXXFLAGS = $(CFLAG_VISIBILITY)
+ libpcrecpp_la_SOURCES = \
+   pcrecpp_internal.h \
+   pcrecpp.cc \
+   pcre_scanner.cc \
+   pcre_stringpiece.cc
+-libpcrecpp_la_LDFLAGS = $(EXTRA_LIBPCRECPP_LDFLAGS)
++libpcrecpp_la_LDFLAGS = -no-undefined $(EXTRA_LIBPCRECPP_LDFLAGS)
+ libpcrecpp_la_LIBADD = libpcre.la
+ 
+ TESTS += pcrecpp_unittest
+@@ -351,6 +357,7 @@ if WITH_PCRE8
+ TESTS += RunGrepTest
+ dist_noinst_SCRIPTS += RunGrepTest
+ bin_PROGRAMS += pcregrep
++pcregrep_CFLAGS = -fwhole-program
+ pcregrep_SOURCES = pcregrep.c
+ pcregrep_LDADD = $(LIBZ) $(LIBBZ2)
+ pcregrep_LDADD += libpcre.la libpcreposix.la
