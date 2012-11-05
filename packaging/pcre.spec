@@ -8,7 +8,6 @@ Url:            ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/
 Group:          System/Libraries
 Source:         ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/%{name}-%{version}.tar.bz2
 Source2:        baselibs.conf
-Patch0:         pcre-visibility.patch
 BuildRequires:  gcc-c++
 BuildRequires:  libtool
 BuildRequires:  pkg-config
@@ -94,7 +93,6 @@ as Perl 5.
 
 %prep
 %setup -q
-%patch0
 
 %build
 # Available JIT archs see sljit/sljitConfig.h
