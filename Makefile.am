@@ -179,6 +179,9 @@ BUILT_SOURCES = pcre_chartables.c
 # Build the 8 bit library if it is enabled.
 if WITH_PCRE8
 lib_LTLIBRARIES += libpcre.la
+
+libpcre_la_CFLAGS = $(CFLAG_VISIBILITY)
+
 libpcre_la_SOURCES = \
   pcre_byte_order.c \
   pcre_compile.c \
@@ -212,6 +215,7 @@ endif # WITH_PCRE8
 # Build the 16 bit library if it is enabled.
 if WITH_PCRE16
 lib_LTLIBRARIES += libpcre16.la
+libpcre16_la_CFLAGS = $(CFLAG_VISIBILITY)
 libpcre16_la_SOURCES = \
   pcre16_byte_order.c \
   pcre16_chartables.c \
@@ -267,10 +271,10 @@ EXTRA_DIST += \
   sljit/sljitUtils.c
 
 if WITH_PCRE8
-libpcre_la_LDFLAGS = $(EXTRA_LIBPCRE_LDFLAGS)
+libpcre_la_LDFLAGS = -no-undefined $(EXTRA_LIBPCRE_LDFLAGS)
 endif # WITH_PCRE8
 if WITH_PCRE16
-libpcre16_la_LDFLAGS = $(EXTRA_LIBPCRE16_LDFLAGS)
+libpcre16_la_LDFLAGS = -no-undefined $(EXTRA_LIBPCRE16_LDFLAGS)
 endif # WITH_PCRE16
 
 CLEANFILES += pcre_chartables.c
@@ -292,9 +296,10 @@ endif # WITH_JIT
 ## A version of the main pcre library that has a posix re API.
 if WITH_PCRE8
 lib_LTLIBRARIES += libpcreposix.la
+libpcreposix_la_CFLAGS = $(CFLAG_VISIBILITY)
 libpcreposix_la_SOURCES = \
   pcreposix.c
-libpcreposix_la_LDFLAGS = $(EXTRA_LIBPCREPOSIX_LDFLAGS)
+libpcreposix_la_LDFLAGS = -no-undefined $(EXTRA_LIBPCREPOSIX_LDFLAGS)
 libpcreposix_la_LIBADD = libpcre.la
 endif # WITH_PCRE8
 
@@ -302,12 +307,13 @@ endif # WITH_PCRE8
 if WITH_PCRE_CPP
 
 lib_LTLIBRARIES += libpcrecpp.la
+libpcrecpp_la_CXXFLAGS = $(CFLAG_VISIBILITY)
 libpcrecpp_la_SOURCES = \
   pcrecpp_internal.h \
   pcrecpp.cc \
   pcre_scanner.cc \
   pcre_stringpiece.cc
-libpcrecpp_la_LDFLAGS = $(EXTRA_LIBPCRECPP_LDFLAGS)
+libpcrecpp_la_LDFLAGS = -no-undefined $(EXTRA_LIBPCRECPP_LDFLAGS)
 libpcrecpp_la_LIBADD = libpcre.la
 
 TESTS += pcrecpp_unittest
@@ -351,6 +357,7 @@ if WITH_PCRE8
 TESTS += RunGrepTest
 dist_noinst_SCRIPTS += RunGrepTest
 bin_PROGRAMS += pcregrep
+pcregrep_CFLAGS = -fwhole-program
 pcregrep_SOURCES = pcregrep.c
 pcregrep_LDADD = $(LIBZ) $(LIBBZ2)
 pcregrep_LDADD += libpcre.la libpcreposix.la
