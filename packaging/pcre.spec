@@ -1,9 +1,9 @@
+%define keepstatic 1
 Name:           pcre
 Version:        8.31
 Release:        0
 License:        BSD-3-Clause
 Summary:        A library for Perl-compatible regular expressions
-#
 Url:            ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/
 Group:          System/Libraries
 Source:         ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/%{name}-%{version}.tar.bz2
@@ -122,18 +122,7 @@ make test
 %make_install
 mkdir -p %{buildroot}/%{_defaultdocdir}
 mv %{buildroot}/usr/share/doc/pcre %{buildroot}/%{_defaultdocdir}/pcre-doc
-#empty dependecy_libs
 rm -f %{buildroot}%{_libdir}/*.la
-
-#ove pcre and pcreposix library into /lib
-#mkdir -p %{buildroot}/%{_lib}
-#for l in libpcre libpcreposix; do
-#  ldest=$(readlink %{buildroot}/%{_libdir}/$l.so)
-#  mv %{buildroot}%{_libdir}/$l.so.* %{buildroot}/%{_lib}
-#  #update the symlinks for linking.
-#  ln -s -vf /%{_lib}/$ldest %{buildroot}%{_libdir}/$l.so
-#done
-
 
 
 %post -n libpcre -p /sbin/ldconfig
