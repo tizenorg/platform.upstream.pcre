@@ -73,9 +73,7 @@ as Perl 5.
 %package doc
 Summary:        A library for Perl-compatible regular expressions
 Group:          System/Libraries
-%if 0%{?suse_version} >= 1120
 BuildArch:      noarch
-%endif
 
 %description doc
 The PCRE library is a set of functions that implement regular
