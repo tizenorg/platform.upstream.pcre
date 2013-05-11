@@ -136,15 +136,19 @@ rm -f %{buildroot}%{_libdir}/*.la
 %postun -n libpcreposix -p /sbin/ldconfig
 
 %files -n libpcre
+%license COPYING
 %{_libdir}/libpcre.so.*
 
 %files -n libpcrecpp
+%license COPYING
 %{_libdir}/libpcrecpp.so.*
 
 %files -n libpcreposix
+%license COPYING
 %{_libdir}/libpcreposix.so.*
 
 %files tools
+%license COPYING
 %{_bindir}/pcregrep
 %{_bindir}/pcretest
 %{_mandir}/man1/pcregrep.*
