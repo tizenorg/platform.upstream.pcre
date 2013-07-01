@@ -8,6 +8,7 @@ Url:            ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/
 Group:          System/Libraries
 Source:         ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/%{name}-%{version}.tar.bz2
 Source2:        baselibs.conf
+Source1001: 	pcre.manifest
 BuildRequires:  gcc-c++
 BuildRequires:  libtool
 BuildRequires:  pkg-config
@@ -91,6 +92,7 @@ as Perl 5.
 
 %prep
 %setup -q
+cp %{SOURCE1001} .
 
 %build
 # Available JIT archs see sljit/sljitConfig.h
@@ -136,18 +138,22 @@ rm -f %{buildroot}%{_libdir}/*.la
 %postun -n libpcreposix -p /sbin/ldconfig
 
 %files -n libpcre
+%manifest %{name}.manifest
 %license COPYING
 %{_libdir}/libpcre.so.*
 
 %files -n libpcrecpp
+%manifest %{name}.manifest
 %license COPYING
 %{_libdir}/libpcrecpp.so.*
 
 %files -n libpcreposix
+%manifest %{name}.manifest
 %license COPYING
 %{_libdir}/libpcreposix.so.*
 
 %files tools
+%manifest %{name}.manifest
 %license COPYING
 %{_bindir}/pcregrep
 %{_bindir}/pcretest
@@ -155,9 +161,11 @@ rm -f %{buildroot}%{_libdir}/*.la
 %{_mandir}/man1/pcretest.*
 
 %files doc
+%manifest %{name}.manifest
 %doc doc/html doc/*.txt
 
 %files devel
+%manifest %{name}.manifest
 %{_bindir}/pcre-config
 %{_includedir}/*
 %{_libdir}/*.so
@@ -168,5 +176,6 @@ rm -f %{buildroot}%{_libdir}/*.la
 %{_mandir}/man3/*.gz
 
 %files devel-static
+%manifest %{name}.manifest
 %{_libdir}/*.a
 
