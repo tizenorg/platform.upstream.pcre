@@ -101,6 +101,9 @@ autoreconf -fiv
 %ifarch %ix86 x86_64 %arm ppc ppc64 mips
 	    --enable-jit \
 %endif
+%ifarch aarch64
+	    --disable-jit \
+%endif
 	    --enable-static \
 	    --with-link-size=2 \
 	    --with-match-limit=10000000 \
