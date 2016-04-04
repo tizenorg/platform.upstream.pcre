@@ -95,6 +95,9 @@ as Perl 5.
 cp %{SOURCE1001} .
 
 %build
+export CFLAGS+=" -fvisibility=hidden"
+  export CXXFLAGS+=" -fvisibility=hidden"
+  
 # Available JIT archs see sljit/sljitConfig.h
 autoreconf -fiv
 %configure \

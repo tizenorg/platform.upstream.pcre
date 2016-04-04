@@ -53,7 +53,7 @@
 
 namespace pcrecpp {
 
-class PCRECPP_EXP_DEFN Scanner {
+class PCRECPP_EXP_DEFN __attribute__ ((visibility ("default"))) Scanner {
  public:
   Scanner();
   explicit Scanner(const std::string& input);
